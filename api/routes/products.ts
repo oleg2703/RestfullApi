@@ -7,10 +7,21 @@ import { error } from 'node:console';
 const router = express.Router();
 
 router.get('/',(req,res,next)=>{
-    res.status(200).json({
-        message: "Get allProduct",
-        body: req.body
-    });
+    Product.find()
+    .exec()
+    .then(docs=>{
+        console.log(docs);
+        // if(docs.length>=0){
+            res.status(200).json(docs);
+        // }else{
+        //     res.status(404).json({message:"No entries found"})
+        // }
+    })
+    .catch(err=>{
+    console.log(err);
+     res.status(500).json({error:err})
+    }
+    );
 });
 
 router.post('/',(req,res,next)=>{
@@ -21,46 +32,52 @@ const product = new Product({
 })
 product.save().then((result)=>{
     console.log(result);
-
-}).catch(err=>console.log(err));
-    res.status(200).json({
+      res.status(201).json({
         message: "Create the product",
-        CreateProduct: product
+        CreateProduct: result
     });
+
+}).catch(err=>{ 
+    console.log(err);
+    res.status(500).json({error:err})});
+  
 });
 
 
 router.get('/:productId', (req, res) => {
-    const id =req.params.productId
-    if(id==="pro"){
-         res.status(200).json({
-        message:"Get product pro",
-        productId: id
+    const id = req.params.productId;
+    Product.findById(id)
+    .exec()
+    .then(doc=>{
+        console.log("From the database",doc);
+        if(doc){
+            res.status(200).json(doc);
+        }else{
+            res.status(404).json({message:"No valid entry found for ID"});
+        }
     })
-    }else{
-         res.status(200).json({
-        message:"Typing some id",
-        productId: id
-    })
-    }
+    .catch(err=>{
+        console.log(err);
+        res.status(500).json({error:err})
+    });
+    
    
 });
-router.post('/:productId', (req, res) => {
-     const id = req.params.productId
-     if(id=='pro'){
-         res.status(201).json({
-        message:"Add product success",
-        id:id
-    })
-    
-     }else
-     {
-         res.status(200).json({
-        message:" Product failed",
-        id:id
-    })
-     }
-   
+router.delete('/:productId', (req, res) => {
+    const id = req.params.productId;
+
+    Product.deleteOne({ _id: id })
+        .exec()
+        .then(result => {
+            res.status(200).json({
+                message: 'Product deleted',
+                result
+            });
+        })
+        .catch(err => {
+            console.log(err);
+            res.status(500).json({ error: err });
+        });
 });
 
 

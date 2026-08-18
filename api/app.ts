@@ -1,12 +1,17 @@
 import express from "express";
 import bodyParser from "body-parser";
 import mongoose from "mongoose";
+import dotenv from 'dotenv'
+import { setServers } from "node:dns/promises";
+
+setServers(["1.1.1.1", "8.8.8.8"]);
 
 import productRoutes from './routes/products';
 import ordersRoutes from './routes/orders'
 import { MongoClient } from "mongodb";
+   dotenv.config();
 
-const mongoUrl = process.env.MONGODB_URI || "mongodb+srv://Node:node-shop@restfullapi.23job8u.mongodb.net/?appName=RestFullApi";
+const mongoUrl = process.env.MONGODB_URI || " ";
 const client = new MongoClient(mongoUrl)
 mongoose.connect(mongoUrl).catch(err => {
     console.error('MongoDB connection error:', err.message);
