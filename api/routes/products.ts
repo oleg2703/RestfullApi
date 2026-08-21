@@ -1,15 +1,40 @@
 import express from 'express'
 import Product from '../models/products'
 import mongoose from 'mongoose';
-import { error } from 'node:console';
-import { request } from 'node:http';
+import multer from 'multer'
 
+const storage = multer.diskStorage({
+destination(req, file, callback) {
+    callback(null,'uploads/');
+},
+filename(req, file, callback) {
+   const uniquePrefix = Date.now();
+    callback(null, `${uniquePrefix}-${file.originalname}`);
+},
+});
+
+const fileFilters =(req: any, file: any,cb: any)=>{
+    //reject  a file
+    if(file.mimetype==='image/jpeg'|| file.mimetype==='image/png'){
+        cb(null,true)
+    }else{
+          cb(null,false);
+    }
+  
+    
+}
+
+const upload = multer({
+    storage:storage,
+    limits:{ fileSize:   1024*1024*5},
+    fileFilter:fileFilters
+});
 
 const router = express.Router();
 
 router.get('/',(req,res,next)=>{
     Product.find()
-    .select('name price _id')
+    .select('name price _id productImage')
     .exec()
     .then(docs=>{
         const response ={
@@ -19,6 +44,7 @@ router.get('/',(req,res,next)=>{
                 name:doc.name,
                 price:doc.price,
                 _id:doc.id,
+                productImage:doc.productImage,
                 request:{
                     type:"GET",
                     url:"http://localhost:4300/products/"+doc.id
@@ -36,11 +62,14 @@ router.get('/',(req,res,next)=>{
     );
 });
 
-router.post('/',(req,res,next)=>{
+router.post('/',upload.single('productImage'),(req,res,next)=>{
+    console.log(req.file);
+    
 const product = new Product({
     _id: new mongoose.Types.ObjectId(),
      name:req.body.name,
-        price:req.body.price
+    price:req.body.price,
+    productImage:req.file?.path
 })
 product.save().then((result)=>{
     console.log(result);
@@ -73,6 +102,7 @@ router.get('/:productId', (req, res) => {
                 name:doc.name,
                 price:doc.price,
                 _id:doc.id,
+                productImage:doc.productImage
             });
         }else{
             res.status(404).json({message:"No valid entry found for ID"});

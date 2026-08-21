@@ -12,7 +12,7 @@ import { MongoClient } from "mongodb";
    dotenv.config();
 
 const mongoUrl = process.env.MONGODB_URI || " ";
-const client = new MongoClient(mongoUrl)
+
 mongoose.connect(mongoUrl).catch(err => {
     console.error('MongoDB connection error:', err.message);
    
@@ -20,12 +20,12 @@ mongoose.connect(mongoUrl).catch(err => {
 
 const app = express();
 
-
+app.use('/uploads',express.static('uploads'))
 app.use(bodyParser.urlencoded({extended:false}))
 app.use(bodyParser.json());
 
 app.use((req,res,next)=>{
-    res.header("Access-Control-Allow-Origin","*") //Запити можуть приходити із різних url 
+    res.header("Access-Control-Allow-Origin","*") 
     res.header("Access-Control-Allow-Headers",
         "Origin, X-Request-With,Content-Type,Accept ,Authorization");
         if( req.method === 'OPTIONS'){

@@ -1,14 +1,17 @@
 import express from "express"
 import mongoose from "mongoose";
 
+
 import Order from '../models/orders'
 import Product from '../models/products'
+
 
 const router = express.Router();
 
 router.get('/',(req,res,next)=>{
    Order.find()
    .select('product quantity _id')
+   .populate('product','name')
    .exec()
    .then(docs=>{
     res.status(200).json({
@@ -58,5 +61,59 @@ router.post('/', async (req, res) => {
     }
 });
 
+router.get('/:orderId',(req,res,next)=>{
+  Order.findById(req.params.orderId)
+  .populate('product')
+  .exec()
+  .then(order=>{
+    if(!order){
+        return res.status(404).json({
+            message:"Order not found"
+        })
+    }
+    res.status(200).json({
+        order:order,
+        request:{
+            type:"GET",
+            url:"http://localhost:4300/orders"
+        }
+    })
+  })
+  .catch(err=>{
+    res.status(500).json({
+        error:err
+    })
+  })
+})
 
-export default router
+
+router.delete('/:orderId', (req, res) => {
+    Order.deleteOne({ _id: req.params.orderId })
+        .exec()
+        .then(result => {
+            if (result.deletedCount === 0) {
+                return res.status(404).json({
+                    message: "Order not found"
+                });
+            }
+
+            return res.status(200).json({
+                message: "Order deleted successfully",
+                request: {
+                    type: "POST",
+                    url: "http://localhost:4300/orders"
+                }
+            });
+        })
+        .catch(err => {
+            res.status(500).json({
+                error: err
+            });
+        });
+});
+
+router.patch('/:orderId', (req, res) => {
+    // Implement update logic here
+});
+
+export default router;
